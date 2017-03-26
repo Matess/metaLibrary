@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+  xmlns:test="http://test.com"
+  xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:file="http://expath.org/ns/file"
+  xmlns:bin="http://expath.org/ns/binary" version="2.0">
+  <xsl:function name="test:getSize">
+    <xsl:param name="url" as="xs:string"/>
+    <xsl:variable name="binary"
+      select="file:read-binary($url)"
+      as="xs:base64Binary"/>
+    <xsl:variable name="location" select="bin:find($binary, 0, bin:hex('FFC0'))"/>
+    <xsl:value-of select="bin:unpack-unsigned-integer($binary,$location+5,2,'most-significant-first')"/>,
+    <xsl:value-of select="bin:unpack-unsigned-integer($binary,$location+7,2,'most-significant-first')"/>,
+    <xsl:value-of select="bin:unpack-unsigned-integer($binary,$location+9,2,'most-significant-first')"/>,
+    <xsl:value-of select="bin:unpack-unsigned-integer($binary,$location+11,2,'most-significant-first')"/>
+  </xsl:function>
+  
+  <xsl:function name="test:checkJFIF">
+    <xsl:param name="url" as="xs:string"/>
+    <xsl:variable name="binary"
+      select="file:read-binary($url)"
+      as="xs:base64Binary"/>
+    <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('4A464946'))"/>
+    <xsl:choose>
+      <xsl:when test="$pos != 0">
+        <xsl:value-of select="true()"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="false()"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:function>
+  
+  <xsl:function name="test:checkEXIF">
+    <xsl:param name="url" as="xs:string"/>
+    <xsl:variable name="binary"
+      select="file:read-binary($url)"
+      as="xs:base64Binary"/>
+    <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('45786966'))"/>
+    <xsl:choose>
+      <xsl:when test="$pos != 0">
+        <xsl:value-of select="true()"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="false()"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:function>
+  
+  <xsl:function name="test:findSMTHING">
+    <xsl:param name="url" as="xs:string"/>
+    <xsl:param name="tagOff" as="xs:integer"/>
+    <xsl:variable name="binary"
+      select="file:read-binary($url)"
+      as="xs:base64Binary"/>
+    <xsl:variable name="zeroIFDoff" select="bin:find($binary, 0, bin:hex('00000008'))-4"/>
+    <xsl:variable name="location" select="bin:find($binary, 0, bin:hex('00000008'))+6"/>
+    <xsl:variable name="numOfTags" select="bin:unpack-unsigned-integer($binary,$location - 2,2,'most-significant-first')"/>
+    <xsl:variable name="metaTag" select="bin:unpack-unsigned-integer($binary,$location+$tagOff,2,'most-significant-first')"/>
+    <xsl:variable name="metaType" select="bin:unpack-unsigned-integer($binary,$location+$tagOff+2,2,'most-significant-first')"/>
+    <xsl:variable name="metaLength" select="bin:unpack-unsigned-integer($binary,$location+$tagOff+4,4,'most-significant-first')"/>
+    <xsl:variable name="metaOffset" as="xs:integer">
+     <xsl:choose>
+       <xsl:when test="$metaLength &lt; 5 and $metaTag != 34665 and $metaTag != 34853"><xsl:value-of select="$location+$tagOff+8"/></xsl:when>
+       <xsl:otherwise><xsl:value-of select="bin:unpack-unsigned-integer($binary,$location+$tagOff+8,4,'most-significant-first')+$zeroIFDoff"/></xsl:otherwise>
+     </xsl:choose>
+    </xsl:variable>
+    
+    <!--<xsl:value-of select="test:findExifIFDOff($binary,$zeroIFDoff)"/>-->
+    
+    <xsl:value-of select="'Loc:',$location+$tagOff,'$numOfTags:',$numOfTags,'$metaTag:',$metaTag,'$metaType:',$metaType,'$metaLength:',$metaLength,'$metaOffset:',$metaOffset"/>
+<!--    <xsl:value-of select="bin:part($binary,$location+12,$location+16)"/>-->
+    <xsl:choose>
+      <xsl:when test="$metaType = 2"><!--STRING-->
+        <xsl:variable name="value" select="bin:decode-string($binary,'UTF-8',$metaOffset,$metaLength)"/>
+<!--        <xsl:value-of select="bin:part($binary,$metaOffset + 30,$metaLength)"/>-->
+        <xsl:value-of select="test:getMetadata($metaTag,$value)"/>
+      </xsl:when>
+      <xsl:when test="$metaType = 3"><!--SHORT A 16-bit (2-byte) unsigned integer-->
+        IntegerShort:<xsl:variable name="value" select="bin:unpack-unsigned-integer($binary,$metaOffset,2,'most-significant-first')"/>
+        <xsl:value-of select="test:getMetadata($metaTag,$value)"/>
+      </xsl:when>
+      <xsl:when test="$metaType = 4"><!--LONG A 32-bit (4-byte) unsigned integer-->
+        IntegerLong:<xsl:variable name="value" select="bin:unpack-unsigned-integer($binary,$metaOffset,4,'most-significant-first')"/>
+        <xsl:value-of select="test:getMetadata($metaTag,$value)"/>
+      </xsl:when>
+      <xsl:when test="$metaType = 5"><!--RATIONAL Two LONGs-->
+        IntegerRational:<xsl:variable name="value" select="bin:unpack-unsigned-integer($binary,$metaOffset,4,'most-significant-first')"/>
+        <xsl:value-of select="test:getMetadata($metaTag,$value)"/>
+      </xsl:when>
+      
+      <xsl:otherwise>
+        <xsl:value-of select="false()"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:function>
+  
+  <xsl:function name="test:getMetadata">
+    <xsl:param name="tag" as="xs:integer"/><!---->
+    <xsl:param name="value"/>
+    <xsl:choose>
+      <xsl:when test="$tag = 0">
+        GPSVersionIF:<xsl:if test="$value = 2"><xsl:value-of select="xs:string('2200')"/></xsl:if>
+      </xsl:when>
+      <xsl:when test="$tag = 1">
+        GPSLatitudeRef:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 2">
+        GPSLatitude:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 3">
+        GPSLongitudeRef:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 4">
+        GPSLongitude:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 5">
+        GPSAltitudeRef:<xsl:choose>
+          <xsl:when test="$value = 0"><xsl:value-of select="xs:string('AboveSeaLevel')"/></xsl:when>
+          <xsl:otherwise><xsl:value-of select="xs:string('BelowSeaLevel')"/></xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <xsl:when test="$tag = 6">
+        GPSAltitude:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 7">
+        GPSTimeStamp:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 18">
+        GPSMapDatum:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 27">
+        GPSProcessingMethod:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 29">
+        GPSDateStamp:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 271">
+        Make:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 272">
+        Model:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 274">
+        Orientation:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 282">
+        XResolution:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 283">
+        YResolution:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 296">
+        ResolutionUnit:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 305">
+        Software:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 306">
+        DateTime:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 531">
+        YCbCrPositioning:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 34665">
+        Exif IFD Pointer:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 34853">
+        GPS Info IFD Pointer:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 34855">
+        ISOSpeedRatings:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 36864">
+        ExifVersion:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 36867">
+        DateTimeOriginal:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 36868">
+        DateTimeDigitalized:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 37121">
+        ComponentsConfiguration:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 37386">
+        FocalLength:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 40960">
+        FlashpixVersion:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 40961">
+        ColorSpace:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 40962">
+        PixelXDimension:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 40963">
+        PixelYDimension:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 40964">
+        RelatedSoundFile:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 40965">
+        Interoperability IFD Pointer:<xsl:value-of select="$value"/>
+      </xsl:when>
+  
+      
+      
+      <xsl:otherwise>
+        MetaTag nenalezen:<xsl:value-of select="$value"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:function>
+  
+  <xsl:function name="test:getEXIFver">
+    <xsl:param name="url" as="xs:string"/>
+    <xsl:variable name="binary"
+      select="file:read-binary($url)"
+      as="xs:base64Binary"/>
+    <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('90000007'))"/>
+    ExifVersion:<xsl:value-of select="bin:decode-string($binary,'UTF-8',$pos+4,8)"/>
+  </xsl:function>
+  
+  <xsl:function name="test:getMetaInfo">
+    <xsl:param name="url" as="xs:string"/>
+    <xsl:variable name="binary"
+      select="file:read-binary($url)"
+      as="xs:base64Binary"/>
+    <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('00020005'))"/>
+    <xsl:variable name="len" select="bin:unpack-unsigned-integer($binary,$pos + 4,4,'most-significant-first')"/>
+    <xsl:variable name="off" select="bin:unpack-unsigned-integer($binary,$pos + 8,4,'most-significant-first')"/>,
+    <xsl:value-of select="'pos:',$pos,'len:',$len,'off:',$off"/>,
+    MetaInfo:<xsl:value-of select="bin:decode-string($binary,'ASCII',$off+30,24)"/>,
+<!--    <xsl:value-of select="bin:part($binary,$pos+$off,$len*2)"/>-->
+    <xsl:value-of select="bin:unpack-unsigned-integer($binary,$off+30,4,'most-significant-first')"/>
+    <xsl:value-of select="bin:unpack-unsigned-integer($binary,$off+34,4,'most-significant-first')"/>
+    <xsl:value-of select="bin:unpack-unsigned-integer($binary,$off+38,4,'most-significant-first')"/>
+    <xsl:value-of select="bin:unpack-unsigned-integer($binary,$off+42,4,'most-significant-first')"/>
+    <xsl:value-of select="bin:unpack-unsigned-integer($binary,$off+46,4,'most-significant-first')"/>
+    <xsl:value-of select="bin:unpack-unsigned-integer($binary,$off+50,4,'most-significant-first')"/>
+  </xsl:function>
+  
+  <xsl:function name="test:getWidth">
+    <xsl:param name="url" as="xs:string"/>
+    <xsl:variable name="binary"
+      select="file:read-binary($url)"
+      as="xs:base64Binary"/>
+    <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('a0020004'))"/>
+    PixelXDimension:<xsl:value-of select="bin:unpack-unsigned-integer($binary,$pos + 8,4,'most-significant-first')"/>
+  </xsl:function>
+  
+  <xsl:function name="test:getHeight">
+    <xsl:param name="url" as="xs:string"/>
+    <xsl:variable name="binary"
+      select="file:read-binary($url)"
+      as="xs:base64Binary"/>
+    <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('a0030004'))"/>
+    PixelYDimension:<xsl:value-of select="bin:unpack-unsigned-integer($binary,$pos + 8,4,'most-significant-first')"/>
+  </xsl:function>
+  
+  <xsl:function name="test:getColorSpace">
+    <xsl:param name="url" as="xs:string"/>
+    <xsl:variable name="binary"
+      select="file:read-binary($url)"
+      as="xs:base64Binary"/>
+    <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('a0010003'))"/>
+    <xsl:variable name="res" select="bin:unpack-unsigned-integer($binary,$pos + 8,2,'most-significant-first')"/>
+    ColorSpace:<xsl:choose>
+      <xsl:when test="$res = 1"><xsl:value-of select="xs:string('sRGB')"/></xsl:when>
+      <xsl:otherwise><xsl:value-of select="xs:string('Uncalibrated')"/></xsl:otherwise>
+    </xsl:choose>
+  </xsl:function>
+  
+  <xsl:function name="test:getComponentsConfiguration">
+    <xsl:param name="url" as="xs:string"/>
+    <xsl:variable name="binary"
+      select="file:read-binary($url)"
+      as="xs:base64Binary"/>
+    <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('91010007'))"/>
+    <xsl:variable name="res1" select="bin:unpack-unsigned-integer($binary,$pos + 8,1,'most-significant-first')"/>
+    <xsl:variable name="res2" select="bin:unpack-unsigned-integer($binary,$pos + 9,1,'most-significant-first')"/>
+    <xsl:variable name="res3" select="bin:unpack-unsigned-integer($binary,$pos + 10,1,'most-significant-first')"/>
+    ComponentsConfiguration:<xsl:choose>
+      <xsl:when test="$res1 = 1 and $res2 = 2 and $res3 = 3"><xsl:value-of select="xs:string('[1230]')"/></xsl:when>
+      <xsl:otherwise><xsl:value-of select="xs:string('[4560]')"/></xsl:otherwise>
+    </xsl:choose>
+  </xsl:function>
+  
+  <xsl:function name="test:findMetadata">
+    <xsl:param name="binary" as="xs:base64Binary"/>
+    <xsl:param name="off" as="xs:integer"/>
+    <xsl:param name="offValue" as="xs:integer"/>
+    <!--<xsl:variable name="pos" select="bin:find($binary, 0, bin:hex($hex))"/>
+    <xsl:variable name="offValue" select="bin:unpack-unsigned-integer($binary,$pos + 8,4,'most-significant-first')"/>-->
+<!--    <xsl:value-of select="bin:unpack-unsigned-integer($binary,$off + $offValue,4,'most-significant-first')"/>-->
+    <xsl:variable name="numOfTags" select="bin:unpack-unsigned-integer($binary,$off + $offValue,2,'most-significant-first')"/>
+    <xsl:value-of select="test:printExifIFD($binary,0,$numOfTags,$off+$offValue+2)"/>
+    --------------------------------------
+  </xsl:function>
+  
+  <xsl:function name="test:findAll">
+    <xsl:param name="url" as="xs:string"/>
+    <xsl:variable name="binary"
+      select="file:read-binary($url)"
+      as="xs:base64Binary"/>
+    <xsl:variable name="off" select="bin:find($binary, 0, bin:hex('00000008'))-4"/>
+    
+    <xsl:value-of select="test:findMetadata($binary,$off+8,0)"/>
+    
+    <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('87690004'))"/>
+    <xsl:variable name="offValue" select="bin:unpack-unsigned-integer($binary,$pos + 8,4,'most-significant-first')"/>
+    <xsl:value-of select="test:findMetadata($binary,$off,$offValue)"/>
+    
+    <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('88250004'))"/>
+    <xsl:variable name="offValue" select="bin:unpack-unsigned-integer($binary,$pos + 8,4,'most-significant-first')"/>
+    <xsl:value-of select="test:findMetadata($binary,$off,$offValue)"/>
+  </xsl:function>
+  <xsl:function name="test:printZeroIFD">
+    <xsl:param name="url" as="xs:string"/>
+    <xsl:param name="i" as="xs:integer"/>
+    <xsl:value-of select="test:findSMTHING($url,$i)"/>
+    <xsl:if test="$i &lt; 120"><xsl:value-of select="test:printZeroIFD($url,$i+12)"/></xsl:if>
+  </xsl:function>
+  
+  <xsl:function name="test:printExifIFD">
+    <xsl:param name="binary" as="xs:base64Binary"/>
+    <xsl:param name="i" as="xs:integer"/>
+    <xsl:param name="numOfTags" as="xs:integer"/>
+    <xsl:param name="location" as="xs:integer"/>
+    <xsl:value-of select="test:readExifMetadata($binary,$i,$location)"/>
+    <xsl:if test="$i &lt; ($numOfTags - 1)*12"><xsl:value-of select="test:printExifIFD($binary,$i+12,$numOfTags,$location)"/></xsl:if>
+  </xsl:function>
+  
+  
+  
+  <xsl:function name="test:readExifMetadata">
+    <xsl:param name="binary" as="xs:base64Binary"/>
+    <xsl:param name="tagOff" as="xs:integer"/>
+    <xsl:param name="location" as="xs:integer"/>
+<!--    <xsl:param name="numOfTags" as="xs:integer"/>-->
+<!--    <xsl:variable name="binary"
+      select="file:read-binary($url)"
+      as="xs:base64Binary"/>-->
+    <xsl:variable name="zeroEXIFoff" select="bin:find($binary, 0, bin:hex('00000008'))-4"/>
+    <xsl:variable name="metaTag" select="bin:unpack-unsigned-integer($binary,$location+$tagOff,2,'most-significant-first')"/>
+    <xsl:variable name="metaType" select="bin:unpack-unsigned-integer($binary,$location+$tagOff+2,2,'most-significant-first')"/>
+    <xsl:variable name="metaLength" select="bin:unpack-unsigned-integer($binary,$location+$tagOff+4,4,'most-significant-first')"/>
+    <xsl:variable name="metaOffset" as="xs:integer">
+      <xsl:choose>
+        <xsl:when test="$metaLength &lt; 5 and $metaType != 5 and $metaTag != 40965"><xsl:value-of select="$location+$tagOff+8"/></xsl:when>
+        <xsl:when test="$metaLength &lt; 2 and $metaType = 5"><xsl:value-of select="$location+$tagOff+8"/></xsl:when>
+        <xsl:otherwise><xsl:value-of select="bin:unpack-unsigned-integer($binary,$location+$tagOff+8,4,'most-significant-first')+$zeroEXIFoff"/></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    
+    
+<!--    <xsl:value-of select="'Locexif:',$location+$tagOff,'$numOfTags:',$numOfTags,'$metaTag:',$metaTag,'$metaType:',$metaType,'$metaLength:',$metaLength,'$metaOffset:',$metaOffset"/>-->
+    <!--    <xsl:value-of select="bin:part($binary,$location+12,$location+16)"/>-->
+    <xsl:choose>
+      <xsl:when test="$metaType = 1"><!--BYTE-->
+        <xsl:variable name="value" select="bin:unpack-unsigned-integer($binary,$metaOffset,1,'most-significant-first')"/>
+        <xsl:value-of select="test:getMetadata($metaTag,$value)"/>
+      </xsl:when>
+      <xsl:when test="$metaType = 2"><!--STRING-->
+        <xsl:variable name="value" select="bin:decode-string($binary,'UTF-8',$metaOffset,$metaLength)"/>
+<!--               part: <xsl:value-of select="bin:part($binary,388,$metaLength)"/>-->
+        <xsl:value-of select="test:getMetadata($metaTag,$value)"/>
+      </xsl:when>
+      <xsl:when test="$metaType = 3"><!--SHORT A 16-bit (2-byte) unsigned integer-->
+        <!--IntegerShort:--><xsl:variable name="value" select="bin:unpack-unsigned-integer($binary,$metaOffset,2,'most-significant-first')"/>
+        <xsl:value-of select="test:getMetadata($metaTag,$value)"/>
+      </xsl:when>
+      <xsl:when test="$metaType = 4"><!--LONG A 32-bit (4-byte) unsigned integer-->
+        <!--IntegerLong:--><xsl:variable name="value" select="bin:unpack-unsigned-integer($binary,$metaOffset,4,'most-significant-first')"/>
+        <xsl:value-of select="test:getMetadata($metaTag,$value)"/>
+      </xsl:when>
+      <xsl:when test="$metaType = 5"><!--RATIONAL Two LONGs-->
+        <!--IntegerRational:--><xsl:variable name="value" select="bin:unpack-unsigned-integer($binary,$metaOffset,4,'most-significant-first')"/>
+        <xsl:value-of select="test:getMetadata($metaTag,$value)"/>
+      </xsl:when>
+      <xsl:when test="$metaType = 7"><!--UNDEFINED-->
+        <!--<xsl:variable name="value" select="bin:unpack-unsigned-integer($binary,$metaOffset,4,'most-significant-first')"/>-->
+        <!--Undefined:--><xsl:variable name="value" select="bin:decode-string($binary,'UTF-8',$metaOffset,$metaLength)"/>
+        <xsl:value-of select="test:getMetadata($metaTag,$value)"/>
+      </xsl:when>
+      
+      <xsl:otherwise>
+        <xsl:value-of select="false()"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:function>
+</xsl:stylesheet>
