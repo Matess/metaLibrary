@@ -135,6 +135,9 @@
       <xsl:when test="$tag = 29">
         GPSDateStamp:<xsl:value-of select="$value"/>
       </xsl:when>
+      <xsl:when test="$tag = 259">
+        Compression:<xsl:value-of select="xs:string('JPEGCompression')"/>
+      </xsl:when>
       <xsl:when test="$tag = 271">
         Make:<xsl:value-of select="$value"/>
       </xsl:when>
@@ -159,8 +162,20 @@
       <xsl:when test="$tag = 306">
         DateTime:<xsl:value-of select="$value"/>
       </xsl:when>
+      <xsl:when test="$tag = 513">
+        JPEGInterchangeFormat:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 514">
+        JPEGInterchangeFormatLength:<xsl:value-of select="$value"/>
+      </xsl:when>
       <xsl:when test="$tag = 531">
         YCbCrPositioning:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 33434">
+        ExposureTime:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 33437">
+        FNumber:<xsl:value-of select="$value"/>
       </xsl:when>
       <xsl:when test="$tag = 34665">
         Exif IFD Pointer:<xsl:value-of select="$value"/>
@@ -183,8 +198,32 @@
       <xsl:when test="$tag = 37121">
         ComponentsConfiguration:<xsl:value-of select="$value"/>
       </xsl:when>
+      <xsl:when test="$tag = 37122">
+        CompressedBitsPerPixel:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 37377">
+        ShutterSpeedValue:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 37378">
+        ApertureValue:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 37380">
+        ExposureBiasValue:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 37381">
+        MaxApertureValue:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 37383">
+        MeteringMode:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 37385">
+        Flash(TODO page 36):<xsl:value-of select="$value"/>
+      </xsl:when>
       <xsl:when test="$tag = 37386">
         FocalLength:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 37510">
+        UserComment:<xsl:value-of select="$value"/>
       </xsl:when>
       <xsl:when test="$tag = 40960">
         FlashpixVersion:<xsl:value-of select="$value"/>
@@ -204,9 +243,40 @@
       <xsl:when test="$tag = 40965">
         Interoperability IFD Pointer:<xsl:value-of select="$value"/>
       </xsl:when>
+      <xsl:when test="$tag = 41486">
+        FocalPlaneXResolution:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 41487">
+        FocalPlaneYResolution:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 41488">
+        FocalPlaneResolutionUnit:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 41495">
+        SensingMethod:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 41728">
+        FileSource:<xsl:value-of select="xs:string('DSC')"/>
+      </xsl:when>
+      <xsl:when test="$tag = 41985">
+        CustomRendered:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 41986">
+        ExposureMode:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 41987">
+        WhiteBalance:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 41988">
+        DigitalZoomRatio:<xsl:value-of select="$value"/>
+      </xsl:when>
+      <xsl:when test="$tag = 41990">
+        SceneCaptureType:<xsl:value-of select="$value"/>
+      </xsl:when>
+      
       
       <xsl:otherwise>
-        MetaTag nenalezen:<xsl:value-of select="$value"/>
+        MetaTag nenalezen:<xsl:value-of select="$tag,$value"/>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:function>
@@ -287,13 +357,31 @@
   
   <xsl:function name="test:findMetadata">
     <xsl:param name="binary" as="xs:base64Binary"/>
+    <xsl:param name="endian" as="xs:string"/>
     <xsl:param name="off" as="xs:integer"/>
     <xsl:param name="offValue" as="xs:integer"/>
     <!--<xsl:variable name="pos" select="bin:find($binary, 0, bin:hex($hex))"/>
     <xsl:variable name="offValue" select="bin:unpack-unsigned-integer($binary,$pos + 8,4,'most-significant-first')"/>-->
 <!--    <xsl:value-of select="bin:unpack-unsigned-integer($binary,$off + $offValue,4,'most-significant-first')"/>-->
-    <xsl:variable name="numOfTags" select="bin:unpack-unsigned-integer($binary,$off + $offValue,2,'most-significant-first')"/>
-    <xsl:value-of select="test:printMetadata($binary,0,$numOfTags,$off+$offValue+2)"/>
+    <xsl:variable name="numOfTags" select="bin:unpack-unsigned-integer($binary,$off + $offValue,2,$endian)"/>
+    <xsl:variable name="nextIFD" select="bin:unpack-unsigned-integer($binary,$off + $offValue + $numOfTags*12 +2,4,$endian)"/>
+    <xsl:value-of select="bin:unpack-unsigned-integer($binary,$off + $offValue + $numOfTags*12 +2,4,$endian),$numOfTags"/>
+<!--    <xsl:value-of select="bin:unpack-unsigned-integer($binary,$nextIFD+30,2,'most-significant-first')"/>-->
+    <xsl:if test="$nextIFD != 0">
+<!--      <xsl:value-of select="$off,$nextIFD"/>-->
+      <xsl:value-of select="test:findMetadata2($binary,$endian,$off - 8,$nextIFD)"/>
+    </xsl:if>
+    <xsl:value-of select="test:printMetadata($binary,$endian,0,$numOfTags,$off+$offValue+2)"/>
+    --------------------------------------
+  </xsl:function>
+  
+  <xsl:function name="test:findMetadata2">
+    <xsl:param name="binary" as="xs:base64Binary"/>
+    <xsl:param name="endian" as="xs:string"/>
+    <xsl:param name="off" as="xs:integer"/>
+    <xsl:param name="offValue" as="xs:integer"/>
+    <xsl:variable name="numOfTags" select="bin:unpack-unsigned-integer($binary,$off + $offValue,2,$endian)"/>
+    <xsl:value-of select="test:printMetadata($binary,$endian,0,$numOfTags,$off+$offValue+2)"/>
     --------------------------------------
   </xsl:function>
   
@@ -302,26 +390,46 @@
     <xsl:variable name="binary"
       select="file:read-binary($url)"
       as="xs:base64Binary"/>
-    <xsl:variable name="off" select="bin:find($binary, 0, bin:hex('00000008'))-4"/>
+    <xsl:variable name="endian" select="test:getEndian($url)"/>
+    <xsl:value-of select="$endian"/>
+    <xsl:choose>
+      <xsl:when test="$endian = 'least-significant-first'">
+        <xsl:variable name="off" select="bin:find($binary, 0, bin:hex('08000000'))-4"/>
+        
+        <xsl:value-of select="test:findMetadata($binary,$endian,$off+8,0)"/>
+        
+        <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('69870400'))"/>
+        <xsl:variable name="offValue" select="bin:unpack-unsigned-integer($binary,$pos + 8,4,'least-significant-first')"/>
+        <xsl:value-of select="test:findMetadata($binary,$endian,$off,$offValue)"/>
+        
+        <!--<xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('25880400'))"/>
+        <xsl:variable name="offValue" select="bin:unpack-unsigned-integer($binary,$pos + 8,4,'least-significant-first')"/>
+        <xsl:value-of select="test:findMetadata($binary,$endian,$off,$offValue)"/>-->
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:variable name="off" select="bin:find($binary, 0, bin:hex('00000008'))-4"/>
+        
+        <xsl:value-of select="test:findMetadata($binary,$endian,$off+8,0)"/>
+        <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('87690004'))"/>
+        <xsl:variable name="offValue" select="bin:unpack-unsigned-integer($binary,$pos + 8,4,'most-significant-first')"/>
+        <xsl:value-of select="test:findMetadata($binary,$endian,$off,$offValue)"/>
+        
+        <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('88250004'))"/>
+        <xsl:variable name="offValue" select="bin:unpack-unsigned-integer($binary,$pos + 8,4,'most-significant-first')"/>
+        <xsl:value-of select="test:findMetadata($binary,$endian,$off,$offValue)"/>
+      </xsl:otherwise>
+    </xsl:choose>
     
-    <xsl:value-of select="test:findMetadata($binary,$off+8,0)"/>
-    
-    <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('87690004'))"/>
-    <xsl:variable name="offValue" select="bin:unpack-unsigned-integer($binary,$pos + 8,4,'most-significant-first')"/>
-    <xsl:value-of select="test:findMetadata($binary,$off,$offValue)"/>
-    
-    <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('88250004'))"/>
-    <xsl:variable name="offValue" select="bin:unpack-unsigned-integer($binary,$pos + 8,4,'most-significant-first')"/>
-    <xsl:value-of select="test:findMetadata($binary,$off,$offValue)"/>
   </xsl:function>
   
   <xsl:function name="test:printMetadata">
     <xsl:param name="binary" as="xs:base64Binary"/>
+    <xsl:param name="endian" as="xs:string"/>
     <xsl:param name="i" as="xs:integer"/>
     <xsl:param name="numOfTags" as="xs:integer"/>
     <xsl:param name="location" as="xs:integer"/>
-    <xsl:value-of select="test:readExifMetadata($binary,$i,$location)"/>
-    <xsl:if test="$i &lt; ($numOfTags - 1)*12"><xsl:value-of select="test:printMetadata($binary,$i+12,$numOfTags,$location)"/></xsl:if>
+    <xsl:value-of select="test:readExifMetadata($binary,$i,$location,$endian)"/>
+    <xsl:if test="$i &lt; ($numOfTags - 1)*12"><xsl:value-of select="test:printMetadata($binary,$endian,$i+12,$numOfTags,$location)"/></xsl:if>
   </xsl:function>
   
   
@@ -330,14 +438,15 @@
     <xsl:param name="binary" as="xs:base64Binary"/>
     <xsl:param name="tagOff" as="xs:integer"/>
     <xsl:param name="location" as="xs:integer"/>
-    <xsl:variable name="zeroEXIFoff" select="bin:find($binary, 0, bin:hex('00000008'))-4"/>
-    <xsl:variable name="metaTag" select="bin:unpack-unsigned-integer($binary,$location+$tagOff,2,'most-significant-first')"/>
-    <xsl:variable name="metaType" select="bin:unpack-unsigned-integer($binary,$location+$tagOff+2,2,'most-significant-first')"/>
+    <xsl:param name="endian" as="xs:string"/>
+<!--    <xsl:variable name="zeroEXIFoff" select="bin:find($binary, 0, bin:hex('00000008'))-4"/>-->
+    <xsl:variable name="metaTag" select="bin:unpack-unsigned-integer($binary,$location+$tagOff,2,$endian)"/>
+    <xsl:variable name="metaType" select="bin:unpack-unsigned-integer($binary,$location+$tagOff+2,2,$endian)"/>
     <xsl:variable name="metaLength" as="xs:integer"> 
-      <xsl:variable name="val" select="bin:unpack-unsigned-integer($binary,$location+$tagOff+4,4,'most-significant-first')"/>
+      <xsl:variable name="val" select="bin:unpack-unsigned-integer($binary,$location+$tagOff+4,4,$endian)"/>
       <xsl:choose>
-        <xsl:when test="$metaType != 5"><xsl:value-of select="bin:unpack-unsigned-integer($binary,$location+$tagOff+4,4,'most-significant-first')"/></xsl:when>
-        <xsl:when test="$metaType = 5 and $val = 1"><xsl:value-of select="$val"/></xsl:when>
+        <xsl:when test="$metaType != 5"><xsl:value-of select="bin:unpack-unsigned-integer($binary,$location+$tagOff+4,4,$endian)"/></xsl:when>
+<!--        <xsl:when test="$metaType = 5 and $val = 1"><xsl:value-of select="$val"/></xsl:when>-->
         <xsl:otherwise><xsl:value-of select="$val*8"/></xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
@@ -345,7 +454,7 @@
       <xsl:choose>
         <xsl:when test="$metaLength &lt; 5 and $metaType != 5 and $metaTag != 40965"><xsl:value-of select="$location+$tagOff+8"/></xsl:when>
         <xsl:when test="$metaLength &lt; 2 and $metaType = 5"><xsl:value-of select="$location+$tagOff+8"/></xsl:when>
-        <xsl:otherwise><xsl:value-of select="bin:unpack-unsigned-integer($binary,$location+$tagOff+8,4,'most-significant-first')+$zeroEXIFoff"/></xsl:otherwise>
+        <xsl:otherwise><xsl:value-of select="bin:unpack-unsigned-integer($binary,$location+$tagOff+8,4,$endian)+30"/></xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
     
@@ -354,7 +463,7 @@
     <!--    <xsl:value-of select="bin:part($binary,$location+12,$location+16)"/>-->
     <xsl:choose>
       <xsl:when test="$metaType = 1"><!--BYTE-->
-        <xsl:variable name="value" select="bin:unpack-unsigned-integer($binary,$metaOffset,1,'most-significant-first')"/>
+        <xsl:variable name="value" select="bin:unpack-unsigned-integer($binary,$metaOffset,1,$endian)"/>
         <xsl:value-of select="test:getMetadata($metaTag,$value)"/>
       </xsl:when>
       <xsl:when test="$metaType = 2"><!--STRING-->
@@ -363,35 +472,43 @@
         <xsl:value-of select="test:getMetadata($metaTag,$value)"/>
       </xsl:when>
       <xsl:when test="$metaType = 3"><!--SHORT A 16-bit (2-byte) unsigned integer-->
-        <!--IntegerShort:--><xsl:variable name="value" select="bin:unpack-unsigned-integer($binary,$metaOffset,2,'most-significant-first')"/>
+        <!--IntegerShort:--><xsl:variable name="value" select="bin:unpack-unsigned-integer($binary,$metaOffset,2,$endian)"/>
         <xsl:value-of select="test:getMetadata($metaTag,$value)"/>
       </xsl:when>
       <xsl:when test="$metaType = 4"><!--LONG A 32-bit (4-byte) unsigned integer-->
-        <!--IntegerLong:--><xsl:variable name="value" select="bin:unpack-unsigned-integer($binary,$metaOffset,4,'most-significant-first')"/>
+        <!--IntegerLong:--><xsl:variable name="value" select="bin:unpack-unsigned-integer($binary,$metaOffset,4,$endian)"/>
         <xsl:value-of select="test:getMetadata($metaTag,$value)"/>
       </xsl:when>
       <xsl:when test="$metaType = 5"><!--RATIONAL Two LONGs-->
         <!--IntegerRational:-->
         <xsl:choose>
         <xsl:when test="$metaTag = 2 or $metaTag = 4">
-          <xsl:variable name="val1" select="string(bin:unpack-unsigned-integer($binary,$metaOffset,4,'most-significant-first'))"/>
+          <xsl:variable name="val1" select="string(bin:unpack-unsigned-integer($binary,$metaOffset,4,$endian))"/>
 <!--          <xsl:value-of select="bin:unpack-unsigned-integer($binary,$metaOffset+4,4,'most-significant-first')"/>-->
-          <xsl:variable name="val2" select="string(bin:unpack-unsigned-integer($binary,$metaOffset+8,4,'most-significant-first'))"/>
+          <xsl:variable name="val2" select="string(bin:unpack-unsigned-integer($binary,$metaOffset+8,4,$endian))"/>
 <!--          <xsl:value-of select="bin:unpack-unsigned-integer($binary,$metaOffset+12,4,'most-significant-first')"/>-->
-          <xsl:variable name="val3" select="bin:unpack-unsigned-integer($binary,$metaOffset+16,4,'most-significant-first')"/>
-          <xsl:variable name="val4" select="bin:unpack-unsigned-integer($binary,$metaOffset+18,2,'most-significant-first')"/>
+          <xsl:variable name="val3" select="bin:unpack-unsigned-integer($binary,$metaOffset+16,4,$endian)"/>
+          <xsl:variable name="val4" select="bin:unpack-unsigned-integer($binary,$metaOffset+18,2,$endian)"/>
           <xsl:variable name="value" select="concat($val1,',00°',$val2,',00´',$val3,',',$val4,'´´')"/>
+         
           <xsl:value-of select="test:getMetadata($metaTag,$value)"/>
         </xsl:when>
           <xsl:when test="$metaTag = 7">
-            <xsl:variable name="val1" select="string(bin:unpack-unsigned-integer($binary,$metaOffset,4,'most-significant-first'))"/>
-            <xsl:variable name="val2" select="string(bin:unpack-unsigned-integer($binary,$metaOffset+8,4,'most-significant-first'))"/>
-            <xsl:variable name="val3" select="bin:unpack-unsigned-integer($binary,$metaOffset+16,4,'most-significant-first')"/>
+            <xsl:variable name="val1" select="string(bin:unpack-unsigned-integer($binary,$metaOffset,4,$endian))"/>
+            <xsl:variable name="val2" select="string(bin:unpack-unsigned-integer($binary,$metaOffset+8,4,$endian))"/>
+            <xsl:variable name="val3" select="bin:unpack-unsigned-integer($binary,$metaOffset+16,4,$endian)"/>
             <xsl:variable name="value" select="concat($val1,',00:',$val2,',00:',$val3,',00´´')"/>
             <xsl:value-of select="test:getMetadata($metaTag,$value)"/>
           </xsl:when>
+          <xsl:when test="$metaTag = 282 or $metaTag = 283">
+            <xsl:variable name="val1" select="string(bin:unpack-unsigned-integer($binary,$metaOffset,4,$endian))"/>
+            <xsl:variable name="val2" select="string(bin:unpack-unsigned-integer($binary,$metaOffset+4,4,$endian))"/>
+
+            <xsl:variable name="value" select="concat($val1,'/',$val2)"/>
+            <xsl:value-of select="test:getMetadata($metaTag,$value)"/>
+          </xsl:when>
           <xsl:otherwise>
-            <xsl:variable name="value" select="bin:unpack-unsigned-integer($binary,$metaOffset,4,'most-significant-first')"/>
+            <xsl:variable name="value" select="bin:unpack-unsigned-integer($binary,$metaOffset,4,$endian)"/>
             <xsl:value-of select="test:getMetadata($metaTag,$value)"/>
           </xsl:otherwise>
         </xsl:choose>
@@ -400,9 +517,9 @@
       <xsl:when test="$metaType = 7"><!--UNDEFINED-->
         <xsl:choose>  
           <xsl:when test="$metaTag = 37121">
-            <xsl:variable name="val1" select="bin:unpack-unsigned-integer($binary,$metaOffset,1,'most-significant-first')"/>
-            <xsl:variable name="val2" select="bin:unpack-unsigned-integer($binary,$metaOffset+1,1,'most-significant-first')"/>
-            <xsl:variable name="val3" select="bin:unpack-unsigned-integer($binary,$metaOffset+2,1,'most-significant-first')"/>
+            <xsl:variable name="val1" select="bin:unpack-unsigned-integer($binary,$metaOffset,1,$endian)"/>
+            <xsl:variable name="val2" select="bin:unpack-unsigned-integer($binary,$metaOffset+1,1,$endian)"/>
+            <xsl:variable name="val3" select="bin:unpack-unsigned-integer($binary,$metaOffset+2,1,$endian)"/>
             <xsl:choose>
               <xsl:when test="$val1 = 1 and $val2 = 2 and $val3 = 3">
                 <xsl:variable name="value" select="xs:string('[1230]')"/>
@@ -414,14 +531,22 @@
               </xsl:otherwise>
             </xsl:choose>
           </xsl:when>
+          <xsl:when test="$metaTag = 37500">
+            TODO:makerNote?
+          </xsl:when>
           <xsl:otherwise>
+            <!--undef7:<xsl:value-of select="bin:part($binary,$metaOffset,$metaLength)"/>-->
            <xsl:variable name="value" select="bin:decode-string($binary,'UTF-8',$metaOffset,$metaLength)"/>
            <xsl:value-of select="test:getMetadata($metaTag,$value)"/>
           </xsl:otherwise>
         </xsl:choose>
       </xsl:when>
+      <xsl:when test="$metaType = 10"><!--SRATIONAL Two LONGs-->
+            <xsl:variable name="value" select="bin:unpack-unsigned-integer($binary,$metaOffset,4,$endian)"/>
+            <xsl:value-of select="test:getMetadata($metaTag,$value)"/>
+      </xsl:when>
       <xsl:otherwise>
-        <xsl:value-of select="xs:string('metaType not defined!')"/>
+        <xsl:value-of select="xs:string('metaType not defined!'),$metaType"/>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:function>
@@ -497,6 +622,23 @@
       </xsl:when>
       <xsl:otherwise>
         <xsl:value-of select="xs:string('Unrecognized image file format')"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:function>
+  
+  <xsl:function name="test:getEndian">
+    <xsl:param name="url" as="xs:string"/>
+    <xsl:variable name="binary"
+      select="file:read-binary($url)"
+      as="xs:base64Binary"/>
+    <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('49492a00'))"/>
+    <!--pos:<xsl:value-of select="$pos"/>-->
+    <xsl:choose>
+      <xsl:when test="empty($pos)">
+        <xsl:value-of select="xs:string('most-significant-first')"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="xs:string('least-significant-first')"/>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:function>
