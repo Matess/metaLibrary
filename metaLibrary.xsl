@@ -222,80 +222,6 @@
     </xsl:choose>
   </xsl:function>
   
-  <xsl:function name="image:getEXIFver">
-    <xsl:param name="url" as="xs:string"/>
-    <xsl:variable name="binary"
-      select="file:read-binary($url)"
-      as="xs:base64Binary"/>
-    <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('90000007'))"/>
-    ExifVersion:<xsl:sequence select="bin:decode-string($binary,'UTF-8',$pos+4,8)"/>
-  </xsl:function>
-  
-  <xsl:function name="image:getMetaInfo">
-    <xsl:param name="url" as="xs:string"/>
-    <xsl:variable name="binary"
-      select="file:read-binary($url)"
-      as="xs:base64Binary"/>
-    <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('00020005'))"/>
-    <xsl:variable name="len" select="bin:unpack-unsigned-integer($binary,$pos + 4,4,'most-significant-first')"/>
-    <xsl:variable name="off" select="bin:unpack-unsigned-integer($binary,$pos + 8,4,'most-significant-first')"/>,
-    <xsl:sequence select="'pos:',$pos,'len:',$len,'off:',$off"/>,
-    MetaInfo:<xsl:sequence select="bin:decode-string($binary,'ASCII',$off+30,24)"/>,
-<!--    <xsl:sequence select="bin:part($binary,$pos+$off,$len*2)"/>-->
-    <xsl:sequence select="bin:unpack-unsigned-integer($binary,$off+30,4,'most-significant-first')"/>
-    <xsl:sequence select="bin:unpack-unsigned-integer($binary,$off+34,4,'most-significant-first')"/>
-    <xsl:sequence select="bin:unpack-unsigned-integer($binary,$off+38,4,'most-significant-first')"/>
-    <xsl:sequence select="bin:unpack-unsigned-integer($binary,$off+42,4,'most-significant-first')"/>
-    <xsl:sequence select="bin:unpack-unsigned-integer($binary,$off+46,4,'most-significant-first')"/>
-    <xsl:sequence select="bin:unpack-unsigned-integer($binary,$off+50,4,'most-significant-first')"/>
-  </xsl:function>
-  
-  <xsl:function name="image:getWidth">
-    <xsl:param name="url" as="xs:string"/>
-    <xsl:variable name="binary"
-      select="file:read-binary($url)"
-      as="xs:base64Binary"/>
-    <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('a0020004'))"/>
-    PixelXDimension:<xsl:sequence select="bin:unpack-unsigned-integer($binary,$pos + 8,4,'most-significant-first')"/>
-  </xsl:function>
-  
-  <xsl:function name="image:getHeight">
-    <xsl:param name="url" as="xs:string"/>
-    <xsl:variable name="binary"
-      select="file:read-binary($url)"
-      as="xs:base64Binary"/>
-    <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('a0030004'))"/>
-    PixelYDimension:<xsl:sequence select="bin:unpack-unsigned-integer($binary,$pos + 8,4,'most-significant-first')"/>
-  </xsl:function>
-  
-  <xsl:function name="image:getColorSpace">
-    <xsl:param name="url" as="xs:string"/>
-    <xsl:variable name="binary"
-      select="file:read-binary($url)"
-      as="xs:base64Binary"/>
-    <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('a0010003'))"/>
-    <xsl:variable name="res" select="bin:unpack-unsigned-integer($binary,$pos + 8,2,'most-significant-first')"/>
-    ColorSpace:<xsl:choose>
-      <xsl:when test="$res = 1"><xsl:sequence select="xs:string('sRGB')"/></xsl:when>
-      <xsl:otherwise><xsl:sequence select="xs:string('Uncalibrated')"/></xsl:otherwise>
-    </xsl:choose>
-  </xsl:function>
-  
-  <xsl:function name="image:getComponentsConfiguration">
-    <xsl:param name="url" as="xs:string"/>
-    <xsl:variable name="binary"
-      select="file:read-binary($url)"
-      as="xs:base64Binary"/>
-    <xsl:variable name="pos" select="bin:find($binary, 0, bin:hex('91010007'))"/>
-    <xsl:variable name="res1" select="bin:unpack-unsigned-integer($binary,$pos + 8,1,'most-significant-first')"/>
-    <xsl:variable name="res2" select="bin:unpack-unsigned-integer($binary,$pos + 9,1,'most-significant-first')"/>
-    <xsl:variable name="res3" select="bin:unpack-unsigned-integer($binary,$pos + 10,1,'most-significant-first')"/>
-    ComponentsConfiguration:<xsl:choose>
-      <xsl:when test="$res1 = 1 and $res2 = 2 and $res3 = 3"><xsl:sequence select="xs:string('[1230]')"/></xsl:when>
-      <xsl:otherwise><xsl:sequence select="xs:string('[4560]')"/></xsl:otherwise>
-    </xsl:choose>
-  </xsl:function>
-  
   <xsl:function name="image:findMetadata">
     <xsl:param name="binary" as="xs:base64Binary"/>
     <xsl:param name="endian" as="xs:string"/>
@@ -304,9 +230,8 @@
 
     <xsl:variable name="numOfTags" select="bin:unpack-unsigned-integer($binary,$off + $offValue,2,$endian)"/>
     <xsl:variable name="nextIFD" select="bin:unpack-unsigned-integer($binary,$off + $offValue + $numOfTags*12 +2,4,$endian)"/>
-<!--    <xsl:sequence select="bin:unpack-unsigned-integer($binary,$off + $offValue + $numOfTags*12 +2,4,$endian),$numOfTags"/>-->
+
     <xsl:if test="$nextIFD != 0">
-<!--      <xsl:sequence select="$off,$nextIFD"/>-->
       <NthIFD>
         <xsl:sequence select="image:findMetadata($binary,$endian,$off,$nextIFD)"/>
       </NthIFD>
@@ -321,14 +246,14 @@
       select="file:read-binary($url)"
       as="xs:base64Binary"/>
     <xsl:variable name="format" select="image:getImageFormat($url)"/>
+    <Image format="{$format}" url="{$url}">
     <xsl:choose>
-      <xsl:when test="$format = 'JPEG'">
-    <!--    <xsl:if test="image:isJPEG($binary) = false()">
-      <xsl:message terminate="yes">ERROR: Only JPEG image format is currently supported!</xsl:message>
-    </xsl:if>-->
+      <xsl:when test="$format = 'JPEGExif'">
+        
     <xsl:variable name="endian" select="image:getEndian($url)"/>
     <xsl:choose>
       <xsl:when test="$endian = 'least-significant-first'">
+        
         <xsl:variable name="off" select="bin:find($binary, 0, bin:hex('08000000'))-4"/>
         
         <xsl:sequence select="image:findMetadata($binary,$endian,$off,8)"/>
@@ -349,6 +274,7 @@
         </xsl:if>
       </xsl:when>
       <xsl:otherwise>
+        
         <xsl:variable name="off" select="bin:find($binary, 0, bin:hex('00000008'))-4"/>
         <xsl:sequence select="image:findMetadata($binary,$endian,$off,8)"/>
         
@@ -367,8 +293,12 @@
             <xsl:sequence select="image:findMetadata($binary,$endian,$off,$offValue)"/>
           </GPSInfo>
         </xsl:if>
+        
       </xsl:otherwise>
     </xsl:choose>
+      </xsl:when>
+      <xsl:when test="$format = 'JPEG'">
+        <xsl:sequence select="image:readJPEG($binary)"/>
       </xsl:when>
       <xsl:when test="$format = 'PNG'">
         <xsl:sequence select="image:readPNG($binary)"/>
@@ -377,10 +307,10 @@
         <xsl:sequence select="image:readGIF($binary)"/>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:message terminate="yes">ERROR: Only JPEG/PNG/GIF image format is currently supported!</xsl:message>
+        <xsl:message terminate="no">ERROR: Only JPEG/PNG/GIF image format is currently supported!</xsl:message>
       </xsl:otherwise>
     </xsl:choose>
-    
+    </Image>
   </xsl:function>
   
   <xsl:function name="image:printMetadata">
@@ -400,7 +330,7 @@
     <xsl:param name="tagOff" as="xs:integer"/>
     <xsl:param name="location" as="xs:integer"/>
     <xsl:param name="endian" as="xs:string"/>
-<!--    <xsl:variable name="zeroEXIFoff" select="bin:find($binary, 0, bin:hex('00000008'))-4"/>-->
+
     <xsl:variable name="metaTag" select="bin:unpack-unsigned-integer($binary,$location+$tagOff,2,$endian)"/>
     <xsl:variable name="metaType" select="bin:unpack-unsigned-integer($binary,$location+$tagOff+2,2,$endian)"/>
     <xsl:variable name="metaLength" as="xs:integer"> 
@@ -421,7 +351,7 @@
     
     
 <!--    <xsl:sequence select="' Loc:',$location+$tagOff,'$metaTag:',$metaTag,'$metaType:',$metaType,'$metaLength:',$metaLength,'$metaOffset:',$metaOffset"/>-->
-    <!--    <xsl:sequence select="bin:part($binary,$location+12,$location+16)"/>-->
+
     <xsl:choose>
       <xsl:when test="$metaType = 1"><!--BYTE-->
         <xsl:variable name="value" select="bin:unpack-unsigned-integer($binary,$metaOffset,1,$endian)"/>
@@ -445,9 +375,7 @@
         <xsl:choose>
         <xsl:when test="$metaTag = 2 or $metaTag = 4">
           <xsl:variable name="val1" select="string(bin:unpack-unsigned-integer($binary,$metaOffset,4,$endian))"/>
-<!--          <xsl:sequence select="bin:unpack-unsigned-integer($binary,$metaOffset+4,4,'most-significant-first')"/>-->
           <xsl:variable name="val2" select="string(bin:unpack-unsigned-integer($binary,$metaOffset+8,4,$endian))"/>
-<!--          <xsl:sequence select="bin:unpack-unsigned-integer($binary,$metaOffset+12,4,'most-significant-first')"/>-->
           <xsl:variable name="val3" select="bin:unpack-unsigned-integer($binary,$metaOffset+16,4,$endian)"/>
           <xsl:variable name="val4" select="bin:unpack-unsigned-integer($binary,$metaOffset+18,2,$endian)"/>
           <xsl:variable name="value" select="concat($val1,',00°',$val2,',00´',$val3,',',$val4,'´´')"/>
@@ -566,7 +494,15 @@
     
     <xsl:choose>
       <xsl:when test="$jpeg = true()">
-        <xsl:sequence select="xs:string('JPEG')"/>
+        <xsl:variable name="exif" select="image:checkEXIF($url)"/>
+        <xsl:choose>
+          <xsl:when test="$exif = true()">
+            <xsl:sequence select="xs:string('JPEGExif')"/>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:sequence select="xs:string('JPEG')"/>
+          </xsl:otherwise>
+        </xsl:choose>
       </xsl:when>
       <xsl:when test="$gif = true()">
         <xsl:sequence select="xs:string('GIF')"/>
@@ -628,7 +564,24 @@
         <PixelAspectRatio><xsl:sequence select="bin:unpack-unsigned-integer($binary,$p2+11,1,'least-significant-first')"/></PixelAspectRatio>
       </xsl:otherwise>
     </xsl:choose>
-    
   </xsl:function>
   
+  <xsl:function name="image:readJPEG">
+    <xsl:param name="binary" as="xs:base64Binary"/>
+    <xsl:variable name="SOF" select="bin:find($binary, 0, bin:hex('FFC0'))"/>
+    <xsl:variable name="DQT" select="bin:find($binary, 0, bin:hex('FFDB'))"/>
+    <xsl:choose>
+      <xsl:when test="$SOF > 0">
+        <BitsPerSample><xsl:sequence select="bin:unpack-unsigned-integer($binary,$SOF+4,1,'most-significant-first')"/></BitsPerSample>
+        <Height><xsl:sequence select="bin:unpack-unsigned-integer($binary,$SOF+5,2,'most-significant-first')"/></Height>
+        <Width><xsl:sequence select="bin:unpack-unsigned-integer($binary,$SOF+7,2,'most-significant-first')"/></Width>
+        <ColorComponents><xsl:sequence select="bin:unpack-unsigned-integer($binary,$SOF+9,1,'most-significant-first')"/></ColorComponents>
+    </xsl:when>
+      <xsl:otherwise>
+        <xsl:variable name="DQTLen" select="bin:unpack-unsigned-integer($binary,$DQT+2,2,'most-significant-first')"/>
+        <Height><xsl:sequence select="bin:unpack-unsigned-integer($binary,$DQT+$DQTLen*2+9,2,'most-significant-first')"/></Height>
+        <Width><xsl:sequence select="bin:unpack-unsigned-integer($binary,$DQT+$DQTLen*2+11,2,'most-significant-first')"/></Width>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:function>
 </xsl:stylesheet>

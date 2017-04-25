@@ -258,14 +258,15 @@ declare function image:findMetadata($binary as xs:base64Binary, $endian as xs:st
     let $nextIFD := bin:unpack-unsigned-integer($binary, $off + $offValue + $numOfTags * 12 + 2, 4, $endian)
     
     let $out :=
-    if($nextIFD != 0) then
-    <JPEG>
-        <NthIFD>{image:findMetadata($binary,$endian,$off,$nextIFD)}</NthIFD>
-        <Data>{image:printMetadata($binary, $endian, 0, $numOfTags, $off + $offValue + 2)}</Data></JPEG>
+    if ($nextIFD != 0) then
+        <JPEGExif>
+            <NthIFD>{image:findMetadata($binary, $endian, $off, $nextIFD)}</NthIFD>
+            <Data>{image:printMetadata($binary, $endian, 0, $numOfTags, $off + $offValue + 2)}</Data></JPEGExif>
     else
         <Data>{image:printMetadata($binary, $endian, 0, $numOfTags, $off + $offValue + 2)}</Data>
-    return $out
-        
+    return
+        $out
+
 };
 
 declare function image:findAll($url as xs:string) as element()+
@@ -274,80 +275,116 @@ declare function image:findAll($url as xs:string) as element()+
     let $format := image:getImageFormat($url)
     
     let $res :=
-    if($format = 'JPEG') then
-        let $endian := image:getEndian($url)
-        let $res := 
-        if($endian = 'least-significant-first') then
-            let $off := bin:find($binary, 0, bin:hex('08000000'))-4
-            let $res := image:findMetadata($binary,$endian,$off,8)
-            
-            let $pos := bin:find($binary, 0, bin:hex('69870400'))
-            let $offValue := bin:unpack-unsigned-integer($binary,$pos + 8,4,'least-significant-first')
-            let $res2 := image:findMetadata($binary,$endian,$off,$offValue)
-            
-            let $pos := bin:find($binary, 0, bin:hex('25880400'))
-            let $offValue := bin:unpack-unsigned-integer($binary,$pos + 8,4,'least-significant-first')
-            let $res3 := image:findMetadata($binary,$endian,$off,$offValue)
-
-            return $res | $res2 | $res3
-            
-           (: let $res :=
-            if ($pos > 0) then
-              let $offValue := bin:unpack-unsigned-integer($binary,$pos + 8,4,'least-significant-first')
-                let $res2 := image:findMetadata($binary,$endian,$off,$offValue)
-                return $res | $res2
-
-            else
-            ()
-            return $res:)
-        else
-            let $off := bin:find($binary, 0, bin:hex('00000008'))-4
-            let $res := image:findMetadata($binary,$endian,$off,8)
-            
-            let $pos := bin:find($binary, 0, bin:hex('87690004'))
-            let $offValue := bin:unpack-unsigned-integer($binary,$pos + 8,4,'most-significant-first')
-            let $res2 := image:findMetadata($binary,$endian,$off,$offValue)
-            
-            let $pos := bin:find($binary, 0, bin:hex('88250004'))
-            let $offValue := bin:unpack-unsigned-integer($binary,$pos + 8,4,'most-significant-first')
-            let $res3 := image:findMetadata($binary,$endian,$off,$offValue)
-            
-            return $res | $res2 | $res3
-        return $res
-    else if($format = 'PNG') then
-    image:readPNG($binary)
-    else if($format = 'GIF') then
-    image:readGIF($binary)
+    if ($format = 'JPEGExif') then
+        <Image
+            format="{$format}"
+            url="{$url}">{
+                let $endian := image:getEndian($url)
+                let $res :=
+                if ($endian = 'least-significant-first') then
+                    let $off := bin:find($binary, 0, bin:hex('08000000')) - 4
+                    let $res := image:findMetadata($binary, $endian, $off, 8)
+                    
+                    let $pos := bin:find($binary, 0, bin:hex('69870400'))
+                    let $offValue := if ($pos) then
+                        bin:unpack-unsigned-integer($binary, $pos + 8, 4, $endian)
+                    else
+                        ()
+                    let $res2 := if ($pos) then
+                        <ExifInfo>{image:findMetadata($binary, $endian, $off, $offValue)}</ExifInfo>
+                    else
+                        ()
+                    
+                    let $pos := bin:find($binary, 0, bin:hex('25880400'))
+                    let $offValue := if ($pos) then
+                        bin:unpack-unsigned-integer($binary, $pos + 8, 4, $endian)
+                    else
+                        ()
+                    let $res3 := if ($pos) then
+                        <GPSInfo>{image:findMetadata($binary, $endian, $off, $offValue)}</GPSInfo>
+                    else
+                        ()
+                    
+                    return
+                        $res | $res2 | $res3
+                else
+                    let $off := bin:find($binary, 0, bin:hex('00000008')) - 4
+                    let $res := image:findMetadata($binary, $endian, $off, 8)
+                    
+                    let $pos := bin:find($binary, 0, bin:hex('87690004'))
+                    let $offValue := if ($pos) then
+                        bin:unpack-unsigned-integer($binary, $pos + 8, 4, $endian)
+                    else
+                        ()
+                    let $res2 := if ($pos) then
+                        <ExifInfo>{image:findMetadata($binary, $endian, $off, $offValue)}</ExifInfo>
+                    else
+                        ()
+                    
+                    let $pos := bin:find($binary, 0, bin:hex('88250004'))
+                    let $offValue := if ($pos) then
+                        bin:unpack-unsigned-integer($binary, $pos + 8, 4, $endian)
+                    else
+                        ()
+                    let $res3 := if ($pos) then
+                        <GPSInfo>{image:findMetadata($binary, $endian, $off, $offValue)}</GPSInfo>
+                    else
+                        ()
+                    
+                    return
+                        $res | $res2 | $res3
+                return
+                    $res
+            }</Image>
     else
-    xs:string("ERROR: Only JPEG/PNG/GIF image format is currently supported!")
-    return $res
+        if ($format = 'JPEG') then
+            <Image
+                format="{$format}"
+                url="{$url}">
+                {image:readJPEG($binary)}</Image>
+        else
+            if ($format = 'PNG') then
+                <Image
+                    format="{$format}"
+                    url="{$url}">
+                    {image:readPNG($binary)}</Image>
+            else
+                if ($format = 'GIF') then
+                    <Image
+                        format="{$format}"
+                        url="{$url}">
+                        {image:readGIF($binary)}</Image>
+                else
+                    <ERROR>Only JPEG/PNG/GIF image format is currently supported!"){$url}</ERROR>
+    return
+        $res
 };
 
 declare function image:printMetadata($binary as xs:base64Binary, $endian as xs:string, $i as xs:integer, $numOfTags as xs:integer, $location as xs:integer) as element()+
 {
     for $c in (0 to $numOfTags - 1)
     return
-        image:readExifMetadata($binary, $c, $location, $endian)
+        image:readExifMetadata($binary, $c * 12, $location, $endian)
 };
 
 declare function image:readExifMetadata($binary as xs:base64Binary, $tagOff as xs:integer, $location as xs:integer, $endian as xs:string) as element()+
 {
     
-    let $metaTag := bin:unpack-unsigned-integer($binary, $location + $tagOff * 12, 2, $endian)
-    let $metaType := bin:unpack-unsigned-integer($binary, $location + $tagOff * 12 + 2, 2, $endian)
+    let $metaTag := bin:unpack-unsigned-integer($binary, $location + $tagOff, 2, $endian)
+    let $metaType := bin:unpack-unsigned-integer($binary, $location + $tagOff + 2, 2, $endian)
     let $metaLength :=
     if ($metaType != 5) then
-        bin:unpack-unsigned-integer($binary, $location + $tagOff * 12 + 4, 4, $endian)
+        bin:unpack-unsigned-integer($binary, $location + $tagOff + 4, 4, $endian)
     else
-        bin:unpack-unsigned-integer($binary, $location + $tagOff * 12 + 4, 4, $endian) * 8
+        bin:unpack-unsigned-integer($binary, $location + $tagOff + 4, 4, $endian) * 8
     let $metaOffset :=
     if ($metaLength < 5 and $metaType != 5) then
-        $location + $tagOff * 12 + 8
+        $location + $tagOff + 8
     else
         if ($metaLength < 2 and $metaType = 5) then
-            $location + $tagOff * 12 + 8
+            $location + $tagOff + 8
         else
-            bin:unpack-unsigned-integer($binary, $location + $tagOff * 12 + 8, 4, $endian) + 30
+            bin:unpack-unsigned-integer($binary, $location + $tagOff + 8, 4, $endian) + 30
     
     let $metadata :=
     
@@ -366,9 +403,64 @@ declare function image:readExifMetadata($binary as xs:base64Binary, $tagOff as x
                 return
                     image:getMetadata($metaTag, $value)
             else
-                let $value := bin:unpack-unsigned-integer($binary, $metaOffset, 4, $endian)
-                return
-                    image:getMetadata($metaTag, $value)
+                if ($metaType = 4) then
+                    let $value := bin:unpack-unsigned-integer($binary, $metaOffset, 4, $endian)
+                    return
+                        image:getMetadata($metaTag, $value)
+                else
+                    if ($metaType = 5) then
+                        let $value :=
+                        if ($metaTag = 2 or $metaTag = 4) then
+                            let $val1 := string(bin:unpack-unsigned-integer($binary, $metaOffset, 4, $endian))
+                            let $val2 := string(bin:unpack-unsigned-integer($binary, $metaOffset + 8, 4, $endian))
+                            let $val3 := string(bin:unpack-unsigned-integer($binary, $metaOffset + 16, 4, $endian))
+                            let $val4 := string(bin:unpack-unsigned-integer($binary, $metaOffset + 18, 2, $endian))
+                            return
+                                image:getMetadata($metaTag, concat($val1, ',00°', $val2, ',00´', $val3, ',', $val4, '´´'))
+                        
+                        else
+                            if ($metaTag = 7) then
+                                let $val1 := string(bin:unpack-unsigned-integer($binary, $metaOffset, 4, $endian))
+                                let $val2 := string(bin:unpack-unsigned-integer($binary, $metaOffset + 8, 4, $endian))
+                                let $val3 := bin:unpack-unsigned-integer($binary, $metaOffset + 16, 4, $endian)
+                                return
+                                    image:getMetadata($metaTag, concat($val1, ',00:', $val2, ',00:', $val3, ',00´´'))
+                            else
+                                if ($metaTag = 282 or $metaTag = 283) then
+                                    let $val1 := string(bin:unpack-unsigned-integer($binary, $metaOffset, 4, $endian))
+                                    let $val2 := string(bin:unpack-unsigned-integer($binary, $metaOffset + 4, 4, $endian))
+                                    return
+                                        image:getMetadata($metaTag, concat($val1, '/', $val2))
+                                else
+                                    let $val := string(bin:unpack-unsigned-integer($binary, $metaOffset, 4, $endian))
+                                    return
+                                        image:getMetadata($metaTag, $val)
+                        return
+                            $value
+                    else
+                        if ($metaType = 7) then
+                            let $value :=
+                            if ($metaTag = 37121) then
+                                let $val1 := bin:unpack-unsigned-integer($binary,$metaOffset,1,$endian)
+                                let $val := if ($val1 = 1) then
+                                    xs:string('[1230]')
+                                else
+                                    xs:string('[4560]')
+                                return
+                                    image:getMetadata($metaTag, $val)
+                            else
+                                let $val := bin:decode-string($binary, 'UTF-8', $metaOffset, $metaLength)
+                                return
+                                    image:getMetadata($metaTag, $val)
+                            
+                            return
+                                $value
+                        else
+                            let $value := bin:unpack-unsigned-integer($binary, $metaOffset, 4, $endian)
+                            return
+                                
+                                image:getMetadata($metaTag, $value)
+    
     return
         $metadata
 };
@@ -411,9 +503,16 @@ declare function image:getImageFormat($url as xs:string) as xs:string
             xs:string("GIF")
         else
             if ($jpeg = true()) then
-                xs:string("JPEG")
+                let $exif := image:checkEXIF($url)
+                let $res := if ($exif) then
+                    xs:string("JPEGExif")
+                else
+                    xs:string("JPEG")
+                return
+                    $res
             else
                 xs:string("Unrecognized image file format")
+    
     return
         $res
 };
@@ -468,10 +567,36 @@ declare function image:readGIF($binary as xs:base64Binary) as element()
         $res
 };
 
+declare function image:readJPEG($binary as xs:base64Binary) as element()
+{
+    let $SOF := bin:find($binary, 0, bin:hex('FFC0'))
+    let $DQT := bin:find($binary, 0, bin:hex('FFDB'))
+    
+    let $res :=
+    if ($SOF > 0) then
+        <JPEG>
+            <BitsPerSample>{bin:unpack-unsigned-integer($binary, $SOF + 4, 1, 'most-significant-first')}</BitsPerSample>
+            <Height>{bin:unpack-unsigned-integer($binary, $SOF + 5, 2, 'most-significant-first')}</Height>
+            <Width>{bin:unpack-unsigned-integer($binary, $SOF + 7, 2, 'most-significant-first')}</Width>
+            <ColorComponents>{bin:unpack-unsigned-integer($binary, $SOF + 9, 1, 'most-significant-first')}</ColorComponents>
+        </JPEG>
+    else
+        let $DQTLen := bin:unpack-unsigned-integer($binary, $DQT + 2, 2, 'most-significant-first')
+        let $res :=
+        <JPEG>
+            <Height>{bin:unpack-unsigned-integer($binary, $DQT + $DQTLen * 2 + 9, 2, 'most-significant-first')}</Height>
+            <Width>{bin:unpack-unsigned-integer($binary, $DQT + $DQTLen * 2 + 11, 2, 'most-significant-first')}</Width>
+        </JPEG>
+        return
+            $res
+    return
+        $res
+};
 
-image:getEndian("F:\exif.jpg"),
+declare variable $folderURL := "F:\Users\";
+declare variable $files := file:list($folderURL, false(), '*.*');
+for $f in $files
+where $f
+return
+    image:findAll(concat($folderURL, $f))
 
-(:image:getMetadata(1, "exif"),
-image:findMetadata(file:read-binary("F:\Users\Matess\Google Drive\BC_stuff\exif.jpg"), 'most-significant-first', 30, 8)
-:)
-image:findAll("F:\exif.jpg")
