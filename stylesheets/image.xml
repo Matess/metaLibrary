@@ -1,0 +1,48 @@
+<Image format="JPEG">
+    <ImageURL>F:\Users\exif.jpg</ImageURL>
+    <NthIFD>
+        <Compression>JPEGCompression</Compression>
+        <XResolution>72/1</XResolution>
+        <YResolution>72/1</YResolution>
+        <ResolutionUnit>2</ResolutionUnit>
+        <JPEGInterchangeFormat>786</JPEGInterchangeFormat>
+        <JPEGInterchangeFormatLength>5732</JPEGInterchangeFormatLength>
+    </NthIFD>
+    <Make>HTC</Make>
+    <Model>Desire HD</Model>
+    <Orientation>1</Orientation>
+    <XResolution>720000/10000</XResolution>
+    <YResolution>720000/10000</YResolution>
+    <ResolutionUnit>2</ResolutionUnit>
+    <Software>Adobe Photoshop CS4 Windows</Software>
+    <DateTime>2012:07:25 08:38:29</DateTime>
+    <YCbCrPositioning>1</YCbCrPositioning>
+    <ExifIFDPointer>220</ExifIFDPointer>
+    <GPSInfoIFDPointer>440</GPSInfoIFDPointer>
+    <ExifInfo>
+        <ISOSpeedRatings>109</ISOSpeedRatings>
+        <ExifVersion>0220</ExifVersion>
+        <DateTimeOriginal>2012:07:19 19:29:40</DateTimeOriginal>
+        <DateTimeDigitalized>2012:07:19 19:29:40</DateTimeDigitalized>
+        <ComponentsConfiguration>[1230]</ComponentsConfiguration>
+        <FocalLength>492</FocalLength>
+        <FlashpixVersion>0100</FlashpixVersion>
+        <ColorSpace>1</ColorSpace>
+        <PixelXDimension>500</PixelXDimension>
+        <PixelYDimension>299</PixelYDimension>
+        <InteroperabilityIFDPointer>408</InteroperabilityIFDPointer>
+    </ExifInfo>
+    <GPSInfo>
+        <GPSVersionIF>2200</GPSVersionIF>
+        <GPSLatitudeRef>N</GPSLatitudeRef>
+        <GPSLatitude>42,00°28,00´5147,5147´´</GPSLatitude>
+        <GPSLongitudeRef>W</GPSLongitudeRef>
+        <GPSLongitude>73,00°40,00´1694,1694´´</GPSLongitude>
+        <GPSAltitudeRef>AboveSeaLevel</GPSAltitudeRef>
+        <GPSAltitude>0</GPSAltitude>
+        <GPSTimeStamp>23,00:29,00:40,00´´</GPSTimeStamp>
+        <GPSMapDatum>WGS-84</GPSMapDatum>
+        <GPSProcessingMethod>ASCIINETWORK</GPSProcessingMethod>
+        <GPSDateStamp>2012:07:19</GPSDateStamp>
+    </GPSInfo>
+</Image>

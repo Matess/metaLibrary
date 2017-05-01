@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-  xmlns:image="https://github.com/Matess/xsltLib"
+  xmlns:image="https://github.com/Matess/metaLibrary"
   xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:file="http://expath.org/ns/file"
   xmlns:bin="http://expath.org/ns/binary" version="2.0" exclude-result-prefixes="#all">
   
@@ -67,8 +67,62 @@
       <xsl:when test="$tag = 7">
         <GPSTimeStamp><xsl:sequence select="$value"/></GPSTimeStamp>
       </xsl:when>
+      <xsl:when test="$tag = 8">
+        <GPSSatellites><xsl:sequence select="$value"/></GPSSatellites>
+      </xsl:when>
+      <xsl:when test="$tag = 9">
+        <GPSStatus><xsl:sequence select="$value"/></GPSStatus>
+      </xsl:when>
+      <xsl:when test="$tag = 10">
+        <GPSMeasureMode><xsl:sequence select="$value"/></GPSMeasureMode>
+      </xsl:when>
+      <xsl:when test="$tag = 11">
+        <GPSDOP><xsl:sequence select="$value"/></GPSDOP>
+      </xsl:when>
+      <xsl:when test="$tag = 12">
+        <GPSSpeedRef><xsl:sequence select="$value"/></GPSSpeedRef>
+      </xsl:when>
+      <xsl:when test="$tag = 13">
+        <GPSSpeed><xsl:sequence select="$value"/></GPSSpeed>
+      </xsl:when>
+      <xsl:when test="$tag = 14">
+        <GPSTrackRef><xsl:sequence select="$value"/></GPSTrackRef>
+      </xsl:when>
+      <xsl:when test="$tag = 15">
+        <GPSTrack><xsl:sequence select="$value"/></GPSTrack>
+      </xsl:when>
+      <xsl:when test="$tag = 16">
+        <GPSImgDirectionRef><xsl:sequence select="$value"/></GPSImgDirectionRef>
+      </xsl:when>
+      <xsl:when test="$tag = 17">
+        <GPSImgDirection><xsl:sequence select="$value"/></GPSImgDirection>
+      </xsl:when>
       <xsl:when test="$tag = 18">
         <GPSMapDatum><xsl:sequence select="$value"/></GPSMapDatum>
+      </xsl:when>
+      <xsl:when test="$tag = 19">
+        <GPSDestLatitudeRef><xsl:sequence select="$value"/></GPSDestLatitudeRef>
+      </xsl:when>
+      <xsl:when test="$tag = 20">
+        <GPSDestLatitude><xsl:sequence select="$value"/></GPSDestLatitude>
+      </xsl:when>
+      <xsl:when test="$tag = 21">
+        <GPSDestLongitudeRef><xsl:sequence select="$value"/></GPSDestLongitudeRef>
+      </xsl:when>
+      <xsl:when test="$tag = 22">
+        <GPSDestLongitude><xsl:sequence select="$value"/></GPSDestLongitude>
+      </xsl:when>
+      <xsl:when test="$tag = 23">
+        <GPSDestBearingRef><xsl:sequence select="$value"/></GPSDestBearingRef>
+      </xsl:when>
+      <xsl:when test="$tag = 24">
+        <GPSDestBearing><xsl:sequence select="$value"/></GPSDestBearing>
+      </xsl:when>
+      <xsl:when test="$tag = 25">
+        <GPSDestDistanceRef><xsl:sequence select="$value"/></GPSDestDistanceRef>
+      </xsl:when>
+      <xsl:when test="$tag = 26">
+        <GPSDestDistance><xsl:sequence select="$value"/></GPSDestDistance>
       </xsl:when>
       <xsl:when test="$tag = 27">
         <GPSProcessingMethod><xsl:sequence select="$value"/></GPSProcessingMethod>
@@ -76,8 +130,23 @@
       <xsl:when test="$tag = 29">
         <GPSDateStamp><xsl:sequence select="$value"/></GPSDateStamp>
       </xsl:when>
+      <xsl:when test="$tag = 256">
+        <ImageWidth><xsl:sequence select="$value"/></ImageWidth>
+      </xsl:when>
+      <xsl:when test="$tag = 257">
+        <ImageLength><xsl:sequence select="$value"/></ImageLength>
+      </xsl:when>
+      <xsl:when test="$tag = 258">
+        <BitsPerSample><xsl:sequence select="$value"/></BitsPerSample>
+      </xsl:when>
       <xsl:when test="$tag = 259">
         <Compression><xsl:sequence select="xs:string('JPEGCompression')"/></Compression>
+      </xsl:when>
+      <xsl:when test="$tag = 262">
+        <PhotometricInterpretation><xsl:sequence select="$value"/></PhotometricInterpretation>
+      </xsl:when>
+      <xsl:when test="$tag = 270">
+        <ImageDescription><xsl:sequence select="$value"/></ImageDescription>
       </xsl:when>
       <xsl:when test="$tag = 271">
         <Make><xsl:sequence select="$value"/></Make>
@@ -85,14 +154,26 @@
       <xsl:when test="$tag = 272">
         <Model><xsl:sequence select="$value"/></Model>
       </xsl:when>
+      <xsl:when test="$tag = 273">
+        <StripOffsets><xsl:sequence select="$value"/></StripOffsets>
+      </xsl:when>
       <xsl:when test="$tag = 274">
         <Orientation><xsl:sequence select="$value"/></Orientation>
+      </xsl:when>
+      <xsl:when test="$tag = 278">
+        <RowsPerStrip><xsl:sequence select="$value"/></RowsPerStrip>
+      </xsl:when>
+      <xsl:when test="$tag = 279">
+        <StripByteCounts><xsl:sequence select="$value"/></StripByteCounts>
       </xsl:when>
       <xsl:when test="$tag = 282">
         <XResolution><xsl:sequence select="$value"/></XResolution>
       </xsl:when>
       <xsl:when test="$tag = 283">
         <YResolution><xsl:sequence select="$value"/></YResolution>
+      </xsl:when>
+      <xsl:when test="$tag = 284">
+        <PlanarConfiguration><xsl:sequence select="$value"/></PlanarConfiguration>
       </xsl:when>
       <xsl:when test="$tag = 296">
         <ResolutionUnit><xsl:sequence select="$value"/></ResolutionUnit>
@@ -111,6 +192,9 @@
       </xsl:when>
       <xsl:when test="$tag = 531">
         <YCbCrPositioning><xsl:sequence select="$value"/></YCbCrPositioning>
+      </xsl:when>
+      <xsl:when test="$tag = 33417">
+        <Copyright><xsl:sequence select="$value"/></Copyright>
       </xsl:when>
       <xsl:when test="$tag = 33434">
         <ExposureTime><xsl:sequence select="$value"/></ExposureTime>
@@ -154,17 +238,32 @@
       <xsl:when test="$tag = 37381">
         <MaxApertureValue><xsl:sequence select="$value"/></MaxApertureValue>
       </xsl:when>
+      <xsl:when test="$tag = 37382">
+        <SubjectDistance><xsl:sequence select="$value"/></SubjectDistance>
+      </xsl:when>
       <xsl:when test="$tag = 37383">
         <MeteringMode><xsl:sequence select="$value"/></MeteringMode>
       </xsl:when>
+      <xsl:when test="$tag = 37384">
+        <LightSource><xsl:sequence select="$value"/></LightSource>
+      </xsl:when>
       <xsl:when test="$tag = 37385">
-        Flash(TODO page 36):<xsl:sequence select="$value"/>
+        <Flash><xsl:sequence select="$value"/></Flash>
       </xsl:when>
       <xsl:when test="$tag = 37386">
         <FocalLength><xsl:sequence select="$value"/></FocalLength>
       </xsl:when>
+      <xsl:when test="$tag = 37500">
+        <MakerNote><xsl:sequence select="$value"/></MakerNote>
+      </xsl:when>
       <xsl:when test="$tag = 37510">
         <UserComment><xsl:sequence select="$value"/></UserComment>
+      </xsl:when>
+      <xsl:when test="$tag = 37521">
+        <SubSecTimeOriginal><xsl:sequence select="$value"/></SubSecTimeOriginal>
+      </xsl:when>
+      <xsl:when test="$tag = 37522">
+        <SubSecTimeDigitized><xsl:sequence select="$value"/></SubSecTimeDigitized>
       </xsl:when>
       <xsl:when test="$tag = 40960">
         <FlashpixVersion><xsl:sequence select="$value"/></FlashpixVersion>
@@ -184,6 +283,12 @@
       <xsl:when test="$tag = 40965">
         <InteroperabilityIFDPointer><xsl:sequence select="$value"/></InteroperabilityIFDPointer>
       </xsl:when>
+      <xsl:when test="$tag = 41483">
+        <FlashEnergy><xsl:sequence select="$value"/></FlashEnergy>
+      </xsl:when>
+      <xsl:when test="$tag = 41484">
+        <SpatialFrequencyResponse><xsl:sequence select="$value"/></SpatialFrequencyResponse>
+      </xsl:when>
       <xsl:when test="$tag = 41486">
         <FocalPlaneXResolution><xsl:sequence select="$value"/></FocalPlaneXResolution>
       </xsl:when>
@@ -193,11 +298,23 @@
       <xsl:when test="$tag = 41488">
         <FocalPlaneResolutionUnit><xsl:sequence select="$value"/></FocalPlaneResolutionUnit>
       </xsl:when>
+      <xsl:when test="$tag = 41492">
+        <SubjectLocation><xsl:sequence select="$value"/></SubjectLocation>
+      </xsl:when>
+      <xsl:when test="$tag = 41493">
+        <ExposureIndex><xsl:sequence select="$value"/></ExposureIndex>
+      </xsl:when>
       <xsl:when test="$tag = 41495">
         <SensingMethod><xsl:sequence select="$value"/></SensingMethod>
       </xsl:when>
       <xsl:when test="$tag = 41728">
         <FileSource><xsl:sequence select="xs:string('DSC')"/></FileSource>
+      </xsl:when>
+      <xsl:when test="$tag = 41729">
+        <SceneType><xsl:sequence select="$value"/></SceneType>
+      </xsl:when>
+      <xsl:when test="$tag = 41730">
+        <CFAPattern><xsl:sequence select="$value"/></CFAPattern>
       </xsl:when>
       <xsl:when test="$tag = 41985">
         <CustomRendered><xsl:sequence select="$value"/></CustomRendered>
@@ -377,8 +494,8 @@
           <xsl:variable name="val1" select="string(bin:unpack-unsigned-integer($binary,$metaOffset,4,$endian))"/>
           <xsl:variable name="val2" select="string(bin:unpack-unsigned-integer($binary,$metaOffset+8,4,$endian))"/>
           <xsl:variable name="val3" select="bin:unpack-unsigned-integer($binary,$metaOffset+16,4,$endian)"/>
-          <xsl:variable name="val4" select="bin:unpack-unsigned-integer($binary,$metaOffset+18,2,$endian)"/>
-          <xsl:variable name="value" select="concat($val1,',00°',$val2,',00´',$val3,',',$val4,'´´')"/>
+          <xsl:variable name="val4" select="bin:unpack-unsigned-integer($binary,$metaOffset+20,4,$endian)"/>
+          <xsl:variable name="value" select="concat($val1,',00°',$val2,',00´',number($val3) div number($val4),'´´')"/>
          
           <xsl:sequence select="image:getMetadata($metaTag,$value)"/>
         </xsl:when>
@@ -421,7 +538,7 @@
             </xsl:choose>
           </xsl:when>
           <xsl:when test="$metaTag = 37500">
-            TODO:makerNote?
+            <xsl:sequence select="image:getMetadata($metaTag,'MakerNote')"/>
           </xsl:when>
           <xsl:otherwise>
             <!--undef7:<xsl:sequence select="bin:part($binary,$metaOffset,$metaLength)"/>-->
@@ -532,7 +649,7 @@
     </xsl:choose>
   </xsl:function>
   
-  <xsl:function name="image:readPNG">
+  <xsl:function name="image:readPNG" as="element()+">
     <xsl:param name="binary" as="xs:base64Binary"/>
     <xsl:variable name="headerPos" select="bin:find($binary, 0, bin:hex('49484452'))"/>
     <Width><xsl:sequence select="bin:unpack-unsigned-integer($binary,$headerPos+4,4,'most-significant-first')"/></Width>
@@ -544,7 +661,7 @@
     <InterlaceMethod><xsl:sequence select="bin:unpack-unsigned-integer($binary,$headerPos+16,1,'most-significant-first')"/></InterlaceMethod>
   </xsl:function>
   
-  <xsl:function name="image:readGIF">
+  <xsl:function name="image:readGIF" as="element()+">
     <xsl:param name="binary" as="xs:base64Binary"/>
     <xsl:variable name="p1" select="bin:find($binary, 0, bin:hex('4946383761'))"/>
     <xsl:variable name="p2" select="bin:find($binary, 0, bin:hex('4946383961'))"/>
@@ -566,7 +683,7 @@
     </xsl:choose>
   </xsl:function>
   
-  <xsl:function name="image:readJPEG">
+  <xsl:function name="image:readJPEG" as="element()+">
     <xsl:param name="binary" as="xs:base64Binary"/>
     <xsl:variable name="SOF" select="bin:find($binary, 0, bin:hex('FFC0'))"/>
     <xsl:variable name="DQT" select="bin:find($binary, 0, bin:hex('FFDB'))"/>
@@ -583,5 +700,17 @@
         <Width><xsl:sequence select="bin:unpack-unsigned-integer($binary,$DQT+$DQTLen*2+11,2,'most-significant-first')"/></Width>
       </xsl:otherwise>
     </xsl:choose>
+  </xsl:function>
+  
+  <xsl:function name="image:readIMGFolder" as="element()+">
+    <xsl:param name="url" as="xs:string"/>
+    <xsl:param name="regex" as="xs:string"/>
+    <xsl:variable name = "files" select="file:list($url,false(),$regex)"/>
+    <Images>
+      <xsl:for-each select="$files">
+        <xsl:variable name = "file" select="concat($url,.)"/>
+        <xsl:sequence select="image:findAll($file)"/>
+      </xsl:for-each>
+    </Images>
   </xsl:function>
 </xsl:stylesheet>

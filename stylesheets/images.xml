@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Images>
+    <Image format="JPEGExif" url="F:\Users\exif.jpg">
+        <NthIFD>
+            <Compression>6</Compression>
+            <XResolution>72/1</XResolution>
+            <YResolution>72/1</YResolution>
+            <ResolutionUnit>2</ResolutionUnit>
+            <JPEGInterchangeFormat>786</JPEGInterchangeFormat>
+            <JPEGInterchangeFormatLength>5732</JPEGInterchangeFormatLength>
+        </NthIFD>
+        <Make>HTC</Make>
+        <Model>Desire HD</Model>
+        <Orientation>1</Orientation>
+        <XResolution>720000/10000</XResolution>
+        <YResolution>720000/10000</YResolution>
+        <ResolutionUnit>2</ResolutionUnit>
+        <Software>Adobe Photoshop CS4 Windows</Software>
+        <DateTime>2012:07:25 08:38:29</DateTime>
+        <YCbCrPositioning>1</YCbCrPositioning>
+        <ExifIFDPointer>220</ExifIFDPointer>
+        <GPSInfoIFDPointer>440</GPSInfoIFDPointer>
+        <ExifInfo>
+            <ISOSpeedRatings>109</ISOSpeedRatings>
+            <ExifVersion>0220</ExifVersion>
+            <DateTimeOriginal>2012:07:19 19:29:40</DateTimeOriginal>
+            <DateTimeDigitalized>2012:07:19 19:29:40</DateTimeDigitalized>
+            <ComponentsConfiguration>[1230]</ComponentsConfiguration>
+            <FocalLength>492</FocalLength>
+            <FlashpixVersion>0100</FlashpixVersion>
+            <ColorSpace>1</ColorSpace>
+            <PixelXDimension>500</PixelXDimension>
+            <PixelYDimension>299</PixelYDimension>
+            <InteroperabilityIFDPointer>408</InteroperabilityIFDPointer>
+        </ExifInfo>
+        <GPSInfo>
+            <GPSVersionIF>2</GPSVersionIF>
+            <GPSLatitudeRef>N</GPSLatitudeRef>
+            <GPSLatitude>42,00°28,00´5147,5147´´</GPSLatitude>
+            <GPSLongitudeRef>W</GPSLongitudeRef>
+            <GPSLongitude>73,00°40,00´1694,1694´´</GPSLongitude>
+            <GPSAltitudeRef>AboveSeaLevel</GPSAltitudeRef>
+            <GPSAltitude>0</GPSAltitude>
+            <GPSTimeStamp>23,00:29,00:40,00´´</GPSTimeStamp>
+            <GPSMapDatum>WGS-84</GPSMapDatum>
+            <GPSProcessingMethod>ASCIINETWORK</GPSProcessingMethod>
+            <GPSDateStamp>2012:07:19</GPSDateStamp>
+        </GPSInfo>
+    </Image>
+    <Image format="JPEGExif" url="F:\Users\exif2.jpg">
+        <NthIFD>
+            <Compression>6</Compression>
+            <XResolution>180/1</XResolution>
+            <YResolution>180/1</YResolution>
+            <ResolutionUnit>2</ResolutionUnit>
+            <JPEGInterchangeFormat>2036</JPEGInterchangeFormat>
+            <JPEGInterchangeFormatLength>5448</JPEGInterchangeFormatLength>
+        </NthIFD>
+        <Make>Canon</Make>
+        <Model>Canon PowerShot S40</Model>
+        <Orientation>1</Orientation>
+        <XResolution>180/1</XResolution>
+        <YResolution>180/1</YResolution>
+        <ResolutionUnit>2</ResolutionUnit>
+        <DateTime>2003:12:14 12:01:44</DateTime>
+        <YCbCrPositioning>1</YCbCrPositioning>
+        <ExifIFDPointer>196</ExifIFDPointer>
+        <ExifInfo>
+            <ExposureTime>1</ExposureTime>
+            <FNumber>49</FNumber>
+            <ExifVersion>0220</ExifVersion>
+            <DateTimeOriginal>2003:12:14 12:01:44</DateTimeOriginal>
+            <DateTimeDigitalized>2003:12:14 12:01:44</DateTimeDigitalized>
+            <ComponentsConfiguration>[1230]</ComponentsConfiguration>
+            <CompressedBitsPerPixel>5</CompressedBitsPerPixel>
+            <ShutterSpeedValue>886</ShutterSpeedValue>
+            <ApertureValue>149</ApertureValue>
+            <ExposureBiasValue>918</ExposureBiasValue>
+            <MaxApertureValue>194698</MaxApertureValue>
+            <MeteringMode>2</MeteringMode>
+            <Flash>24</Flash>
+            <FocalLength>682</FocalLength>
+            <MetaTagUnknown>65548</MetaTagUnknown>
+            <UserComment></UserComment>
+            <FlashpixVersion>0100</FlashpixVersion>
+            <ColorSpace>1</ColorSpace>
+            <PixelXDimension>2272</PixelXDimension>
+            <PixelYDimension>1704</PixelYDimension>
+            <InteroperabilityIFDPointer>1416</InteroperabilityIFDPointer>
+            <FocalPlaneXResolution>2272000</FocalPlaneXResolution>
+            <FocalPlaneYResolution>1704000</FocalPlaneYResolution>
+            <FocalPlaneResolutionUnit>2</FocalPlaneResolutionUnit>
+            <SensingMethod>2</SensingMethod>
+            <FileSource>5</FileSource>
+            <CustomRendered>0</CustomRendered>
+            <ExposureMode>0</ExposureMode>
+            <WhiteBalance>0</WhiteBalance>
+            <DigitalZoomRatio>2272</DigitalZoomRatio>
+            <SceneCaptureType>0</SceneCaptureType>
+        </ExifInfo>
+    </Image>
+    <Image format="GIF" url="F:\Users\gif.gif">
+        <GIFVersion>87a</GIFVersion>
+        <Width>249</Width>
+        <Height>171</Height>
+        <BackgroundColorIndex>0</BackgroundColorIndex>
+        <PixelAspectRatio>0</PixelAspectRatio>
+    </Image>
+    <Image format="GIF" url="F:\Users\gif2.gif">
+        <GIFVersion>87a</GIFVersion>
+        <Width>200</Width>
+        <Height>200</Height>
+        <BackgroundColorIndex>0</BackgroundColorIndex>
+        <PixelAspectRatio>0</PixelAspectRatio>
+    </Image>
+</Images>
